@@ -45,6 +45,28 @@ after(async () => {
   if (mongoServer) await mongoServer.stop();
 });
 
+test('root route returns the public backend status response', async () => {
+  const response = await request(app).get('/').expect(200);
+  assert.deepEqual(response.body, {
+    success: true,
+    message: 'DukaanBuz Backend API is running successfully!',
+    version: '1.0.0',
+  });
+});
+
+test('unknown routes return the shared 404 response', async () => {
+  const response = await request(app).get('/not-a-real-route').expect(404);
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.message, 'Route not found: GET /not-a-real-route');
+});
+
+test('malformed JSON uses the error middleware', async () => {
+  const response = await request(app).post('/api/auth/login')
+    .set('Content-Type', 'application/json').send('{').expect(400);
+  assert.equal(response.body.success, false);
+  assert.equal(response.body.message, 'Request body contains invalid JSON');
+});
+
 test('health check responds with the shared response shape', async () => {
   const response = await request(app).get('/api/health').expect(200);
   assert.equal(response.body.success, true);

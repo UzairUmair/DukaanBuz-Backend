@@ -26,8 +26,29 @@ after(async () => {
   delete process.env.VERCEL;
 });
 
-test('Vercel mode connects lazily and persists product images in GridFS', async () => {
+test('root route and API work in Vercel mode', async () => {
+  assert.equal(mongoose.connection.readyState, 0);
+  const root = await request(app).get('/').expect(200);
+  assert.equal(mongoose.connection.readyState, 0);
+  assert.deepEqual(root.body, {
+    success: true,
+    message: 'DukaanBuz Backend API is running successfully!',
+    version: '1.0.0',
+  });
   await request(app).get('/api/health').expect(200);
+});
+
+test('Vercel mode rejects a short JWT secret without weakening validation', async () => {
+  const secret = process.env.JWT_SECRET;
+  process.env.JWT_SECRET = 'too-short';
+  try {
+    await request(app).get('/api/health').expect(503);
+  } finally {
+    process.env.JWT_SECRET = secret;
+  }
+});
+
+test('Vercel mode connects lazily and persists product images in GridFS', async () => {
 
   await request(app).post('/api/auth/register').send({
     fullName: 'Vercel Seller',

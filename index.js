@@ -34,6 +34,15 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   next();
 });
+
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'DukaanBuz Backend API is running successfully!',
+    version: '1.0.0',
+  });
+});
+
 if (process.env.VERCEL === '1') {
   app.use(async (_req, res, next) => {
     try {
@@ -43,7 +52,7 @@ if (process.env.VERCEL === '1') {
       await connectDB();
       next();
     } catch (error) {
-      console.error('Unable to initialize backend:', error.message);
+      console.error('Unable to initialize backend: check JWT_SECRET, MONGODB_URI and Atlas access.', error.name);
       res.status(503).json({ success: false, message: 'Backend service is unavailable', errors: [] });
     }
   });
@@ -83,7 +92,7 @@ const startServer = async () => {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(currentFile)) {
   startServer().catch((error) => {
-    console.error('Unable to start server:', error.message);
+    console.error('Unable to start server: check JWT_SECRET, MONGODB_URI and Atlas access.', error.name);
     process.exit(1);
   });
 }

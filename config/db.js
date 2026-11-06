@@ -15,6 +15,7 @@ export const connectDB = async (uri = process.env.MONGODB_URI) => {
   try {
     await connectionPromise;
   } catch (error) {
+    console.error('MongoDB connection failed:', error.name, error.code || '');
     throw error;
   } finally {
     connectionPromise = undefined;
