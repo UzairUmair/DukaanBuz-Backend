@@ -8,7 +8,7 @@ import request from 'supertest';
 
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test_secret_that_is_safely_longer_than_thirty_two_characters';
-process.env.CLIENT_URL = 'http://localhost:5173';
+process.env.CLIENT_URL = 'https://dukaansaz-frontend.vercel.app';
 
 const { default: app } = await import('../index.js');
 const { connectDB, disconnectDB } = await import('../config/db.js');
@@ -71,6 +71,24 @@ test('health check responds with the shared response shape', async () => {
   const response = await request(app).get('/api/health').expect(200);
   assert.equal(response.body.success, true);
   assert.equal(response.body.data.status, 'ok');
+});
+
+test('CORS permits the configured frontend and localhost with required headers', async () => {
+  for (const origin of ['https://dukaansaz-frontend.vercel.app', 'http://localhost:5173']) {
+    const response = await request(app).options('/api/products')
+      .set('Origin', origin)
+      .set('Access-Control-Request-Method', 'POST')
+      .set('Access-Control-Request-Headers', 'authorization,content-type')
+      .expect(204);
+    assert.equal(response.headers['access-control-allow-origin'], origin);
+    assert.match(response.headers['access-control-allow-headers'], /Authorization/);
+    assert.match(response.headers['access-control-allow-headers'], /Content-Type/);
+  }
+  const blocked = await request(app).options('/api/products')
+    .set('Origin', 'https://untrusted.example')
+    .set('Access-Control-Request-Method', 'POST')
+    .expect(401);
+  assert.equal(blocked.headers['access-control-allow-origin'], undefined);
 });
 
 test('registration validates input and rejects duplicate emails', async () => {

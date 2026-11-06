@@ -116,7 +116,7 @@ C:\\Users\\Uzair M.Umair\\Documents\\DukaanSaz\\backend
 | --- | --- |
 | `MONGODB_URI` | A rotated MongoDB Atlas URI ending in `/dukaansaz?retryWrites=true&w=majority` |
 | `JWT_SECRET` | A new random secret with at least 32 characters |
-| `CLIENT_URL` | The exact deployed React origin, e.g. `https://your-frontend.vercel.app` |
+| `CLIENT_URL` | The exact deployed React origin, `https://dukaansaz-frontend.vercel.app`. The server also permits `http://localhost:5173` for development. Multiple exact production origins may be comma-separated. |
 | `JWT_EXPIRES_IN` | `7d` (optional) |
 
 Do not add `PORT` on Vercel. Do not upload `.env`; `.vercelignore` excludes it. In MongoDB Atlas, create a new database password because any URI pasted into chat should be treated as exposed, and configure **Network Access** so Vercel Functions can reach the cluster.

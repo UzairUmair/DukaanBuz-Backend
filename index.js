@@ -15,11 +15,15 @@ import { getGridImage } from './config/imageStorage.js';
 
 const app = express();
 const currentFile = fileURLToPath(import.meta.url);
+const allowedClientOrigins = new Set([
+  'http://localhost:5173',
+  ...(process.env.CLIENT_URL || '').split(',').map((origin) => origin.trim()).filter(Boolean),
+]);
 
 app.disable('x-powered-by');
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => callback(null, !origin || allowedClientOrigins.has(origin)),
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
