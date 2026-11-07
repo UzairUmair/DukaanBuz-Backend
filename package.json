@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "test": "node --test --test-concurrency=1"
+    "test": "node --test --test-concurrency=1",
+    "seed:demo": "node scripts/seedDemoStore.js",
+    "verify:studio": "node scripts/verifyStudio.mjs"
   },
   "engines": {
     "node": ">=20"

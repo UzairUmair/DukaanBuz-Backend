@@ -67,10 +67,13 @@ test('malformed JSON uses the error middleware', async () => {
   assert.equal(response.body.message, 'Request body contains invalid JSON');
 });
 
-test('health check responds with the shared response shape', async () => {
+test('health check pings MongoDB and reports safe readiness', async () => {
   const response = await request(app).get('/api/health').expect(200);
-  assert.equal(response.body.success, true);
-  assert.equal(response.body.data.status, 'ok');
+  assert.deepEqual(response.body, {
+    success: true,
+    message: 'DukaanSaz API is healthy',
+    data: { status: 'ok', database: 'ready' },
+  });
 });
 
 test('CORS permits the configured frontend and localhost with required headers', async () => {
@@ -155,6 +158,39 @@ test('sellers can create one store with a normalized Pakistani WhatsApp number',
     whatsappNumber: '+923001234567',
   }).expect(409);
   assert.equal(duplicate.body.success, false);
+});
+
+test('appearance settings validate, persist, and are public', async () => {
+  const saved = await request(app)
+    .put('/api/stores/me/appearance')
+    .set('Authorization', `Bearer ${sellerAToken}`)
+    .send({
+      themePreset: 'editorial',
+      primaryColor: '#553322',
+      heroTitle: 'A new collection',
+      heroSubtitle: 'Made slowly in Karachi',
+    })
+    .expect(200);
+  assert.equal(saved.body.data.appearance.themePreset, 'editorial');
+  assert.equal(saved.body.data.appearance.primaryColor, '#553322');
+
+  const invalidColor = await request(app)
+    .put('/api/stores/me/appearance')
+    .set('Authorization', `Bearer ${sellerAToken}`)
+    .send({ primaryColor: 'url(javascript:alert(1))' })
+    .expect(400);
+  assert.equal(invalidColor.body.errors[0].field, 'primaryColor');
+
+  const unsupported = await request(app)
+    .put('/api/stores/me/appearance')
+    .set('Authorization', `Bearer ${sellerAToken}`)
+    .send({ logoUrl: 'https://example.test/logo.png' })
+    .expect(400);
+  assert.equal(unsupported.body.errors[0].field, 'logoUrl');
+
+  const publicStore = await request(app).get('/api/public/stores/ayesha-crafts').expect(200);
+  assert.equal(publicStore.body.data.appearance.heroTitle, 'A new collection');
+  assert.equal(publicStore.body.data.appearance.primaryColor, '#553322');
 });
 
 test('seller product CRUD, filtering, and dashboard statistics work', async () => {
@@ -301,6 +337,14 @@ test('public storefront shows only active products and keeps stores isolated', a
     .set('Authorization', `Bearer ${sellerBToken}`)
     .expect(200);
   assert.deepEqual(sellerBProducts.body.data, []);
+
+  await request(app)
+    .put('/api/stores/me/appearance')
+    .set('Authorization', `Bearer ${sellerBToken}`)
+    .send({ primaryColor: '#112233' })
+    .expect(200);
+  const sellerAPublicStore = await request(app).get('/api/public/stores/ayesha-crafts').expect(200);
+  assert.equal(sellerAPublicStore.body.data.appearance.primaryColor, '#553322');
 });
 
 test('deleting a product removes its local image and data', async () => {

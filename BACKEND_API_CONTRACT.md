@@ -49,6 +49,29 @@ A user object never includes `passwordHash`.
 | GET | `/api/stores/me` | Yes | `data` is `null` when no store exists |
 | POST | `/api/stores` | Yes | `{ "name", "slug?", "description?", "whatsappNumber", "city?" }` |
 | PUT | `/api/stores/me` | Yes | Any editable store fields |
+| PUT | `/api/stores/me/appearance` | Yes | One or more validated appearance fields listed below |
+
+### Store appearance
+
+The Design Studio persists this seller-owned structure and public store responses include it:
+
+```json
+{
+  "themePreset": "heritage",
+  "primaryColor": "#063D32",
+  "accentColor": "#A7E2BD",
+  "backgroundColor": "#FAF8F3",
+  "fontPreset": "inter",
+  "headerStyle": "minimal",
+  "productCardStyle": "soft",
+  "gridDensity": "comfortable",
+  "heroLayout": "split",
+  "heroTitle": "",
+  "heroSubtitle": ""
+}
+```
+
+Supported theme presets are `heritage`, `editorial`, and `modern`; font presets are `inter`, `manrope`, and `jakarta`; headers are `minimal`, `centered`, and `editorial`; product cards are `minimal`, `soft`, and `editorial`; grid density is `compact`, `comfortable`, or `spacious`; and hero layouts are `split`, `banner`, or `minimal`. Colors must be six-digit hex values. Hero title/subtitle lengths are limited to 120/500 characters. Unsupported fields, including `logoUrl` and `heroImageUrl`, return field-level validation errors because dedicated logo and banner upload support is not currently implemented.
 
 Only one store may belong to one seller in this MVP. Slugs are normalized to lowercase kebab case. Reserved slugs (such as `api`, `admin`, and `uploads`) are rejected. `whatsappNumber` accepts formats such as `03001234567` and `+923001234567`, then stores the normalized form `923001234567`.
 
@@ -110,7 +133,7 @@ Local development stores images in `uploads/products`. On Vercel, the backend st
 | Method | Endpoint | Auth | Result |
 | --- | --- | --- | --- |
 | GET | `/api/dashboard/stats` | Yes | `totalProducts`, `activeProducts`, `outOfStockProducts` |
-| GET | `/api/health` | No | Health response |
+| GET | `/api/health` | No | Performs a MongoDB ping; `200` includes `{ "status": "ok", "database": "ready" }`, and safe `503` otherwise |
 
 ## Data schemas
 

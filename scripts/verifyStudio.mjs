@@ -16,6 +16,15 @@ try {
  const store=await seedDemoStore();await seedDemoStore();
  const products=await request(app).get('/api/public/stores/mitti-studio-demo/products');
  assert.equal(products.body.data.length,6);
+ assert.deepEqual(products.body.data.map(product=>[product.title,product.category,product.price,product.stock]).sort(),[
+  ['Artisan Cup Set','Drinkware',2850,10],
+  ['Ceramic Serving Plate','Tableware',2400,8],
+  ['Glazed Ceramic Bowl','Tableware',1750,12],
+  ['Handmade Coffee Mug','Drinkware',950,20],
+  ['Minimal Clay Planter','Home Decor',1150,15],
+  ['Terracotta Flower Vase','Home Decor',2200,6],
+ ].sort());
+ assert.ok(products.body.data.every(product=>product.imageUrl===''));
  const login=await request(app).post('/api/auth/login').send({email:process.env.DEMO_EMAIL,password:process.env.DEMO_PASSWORD});
  const token=login.body.data.token;
  const save=await request(app).put('/api/stores/me/appearance').set('Authorization','Bearer '+token).send({primaryColor:'#553322',themePreset:'editorial',heroTitle:'A new collection'});

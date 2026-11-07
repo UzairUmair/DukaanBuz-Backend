@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import express from 'express';
-import { connectDB } from './config/db.js';
+import { checkDatabaseReady, connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -65,11 +65,20 @@ if (process.env.VERCEL === '1') {
   app.use('/uploads/products', express.static(productUploadDirectory, { index: false }));
 }
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', async (_req, res) => {
+  if (!(await checkDatabaseReady())) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database service is unavailable',
+      data: { status: 'unavailable', database: 'unavailable' },
+      errors: [],
+    });
+  }
+
   res.json({
     success: true,
     message: 'DukaanSaz API is healthy',
-    data: { status: 'ok' },
+    data: { status: 'ok', database: 'ready' },
   });
 });
 

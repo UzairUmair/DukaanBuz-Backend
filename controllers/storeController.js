@@ -35,6 +35,50 @@ const normalizeWhatsappNumber = (value) => {
   return /^923\d{9}$/.test(digits) ? digits : null;
 };
 
+const appearanceOptions = {
+  themePreset: new Set(['heritage', 'editorial', 'modern']),
+  fontPreset: new Set(['inter', 'manrope', 'jakarta']),
+  headerStyle: new Set(['minimal', 'centered', 'editorial']),
+  productCardStyle: new Set(['minimal', 'soft', 'editorial']),
+  gridDensity: new Set(['compact', 'comfortable', 'spacious']),
+  heroLayout: new Set(['split', 'banner', 'minimal']),
+};
+const appearanceTextLimits = { heroTitle: 120, heroSubtitle: 500 };
+const colorPattern = /^#[0-9a-f]{6}$/i;
+
+const validateAppearanceInput = (body) => {
+  const errors = [];
+  const values = {};
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return { errors: [{ field: 'appearance', message: 'Appearance must be a JSON object' }], values };
+  }
+
+  for (const [field, value] of Object.entries(body)) {
+    if (!Object.hasOwn(appearanceOptions, field) && !Object.hasOwn(appearanceTextLimits, field) && !['primaryColor', 'accentColor', 'backgroundColor'].includes(field)) {
+      errors.push({ field, message: 'This appearance field is not supported' });
+      continue;
+    }
+    if (typeof value !== 'string') {
+      errors.push({ field, message: 'Appearance values must be strings' });
+      continue;
+    }
+
+    const trimmed = value.trim();
+    if (appearanceOptions[field] && !appearanceOptions[field].has(trimmed)) {
+      errors.push({ field, message: 'Unsupported appearance option' });
+    } else if (['primaryColor', 'accentColor', 'backgroundColor'].includes(field) && !colorPattern.test(trimmed)) {
+      errors.push({ field, message: 'Color must be a six-digit hex value such as #063D32' });
+    } else if (appearanceTextLimits[field] !== undefined && trimmed.length > appearanceTextLimits[field]) {
+      errors.push({ field, message: `Text cannot exceed ${appearanceTextLimits[field]} characters` });
+    } else {
+      values[field] = trimmed;
+    }
+  }
+
+  return { errors, values };
+};
+
 const validateStoreInput = (body, partial = false) => {
   const errors = [];
   const values = {};
@@ -146,13 +190,23 @@ export const updateMyStore = async (req, res) => {
 
 export const updateAppearance = async (req, res) => {
   const store = await Store.findOne({ owner: req.user._id });
-  if (!store) return res.status(404).json({ success: false, message: 'Store not found' });
-  const allowed = ['themePreset','fontPreset','headerStyle','productCardStyle','gridDensity','heroLayout','primaryColor','accentColor','backgroundColor','heroTitle','heroSubtitle'];
-  if (!req.body || Object.keys(req.body).some(key => !allowed.includes(key)) ||
-      Object.values(req.body).some(value => typeof value !== 'string')) {
-    return res.status(400).json({ success: false, message: 'Invalid appearance fields' });
+  if (!store) {
+    return res.status(404).json({ success: false, message: 'Store not found', errors: [] });
   }
-  store.appearance = { ...store.appearance.toObject(), ...req.body };
+
+  const { errors, values } = validateAppearanceInput(req.body);
+  if (errors.length > 0) {
+    return res.status(400).json({ success: false, message: 'Validation failed', errors });
+  }
+  if (Object.keys(values).length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Provide at least one appearance field',
+      errors: [],
+    });
+  }
+
+  store.appearance = { ...store.appearance.toObject(), ...values };
   await store.save();
-  res.json({ success: true, data: store });
+  res.json({ success: true, message: 'Store appearance updated successfully', data: store });
 };

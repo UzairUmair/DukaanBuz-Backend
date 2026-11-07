@@ -26,7 +26,7 @@ after(async () => {
   delete process.env.VERCEL;
 });
 
-test('root route and API work in Vercel mode', async () => {
+test('root route stays connection-free while health verifies Vercel database readiness', async () => {
   assert.equal(mongoose.connection.readyState, 0);
   const root = await request(app).get('/').expect(200);
   assert.equal(mongoose.connection.readyState, 0);
@@ -35,7 +35,9 @@ test('root route and API work in Vercel mode', async () => {
     message: 'DukaanBuz Backend API is running successfully!',
     version: '1.0.0',
   });
-  await request(app).get('/api/health').expect(200);
+  const health = await request(app).get('/api/health').expect(200);
+  assert.deepEqual(health.body.data, { status: 'ok', database: 'ready' });
+  assert.equal(mongoose.connection.readyState, 1);
 });
 
 test('Vercel mode rejects a short JWT secret without weakening validation', async () => {

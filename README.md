@@ -39,7 +39,9 @@ Use `npm start` for the non-nodemon command.
 | `MONGODB_URI` | Local MongoDB URI, e.g. `mongodb://127.0.0.1:27017/dukaansaz` |
 | `JWT_SECRET` | Long secret used to sign JWTs (at least 32 characters) |
 | `JWT_EXPIRES_IN` | JWT lifetime, default `7d` |
-| `CLIENT_URL` | CORS-allowed frontend development URL (`http://localhost:5173`) |
+| `CLIENT_URL` | Exact CORS-allowed frontend origins, comma-separated when necessary (localhost is always allowed for development) |
+| `DEMO_EMAIL` | Designated demo seller email, required only for `npm run seed:demo` |
+| `DEMO_PASSWORD` | Private demo seller password (at least 12 characters), required only for `npm run seed:demo` |
 
 `.env` is ignored by Git. Do not commit it.
 
@@ -77,7 +79,16 @@ See [BACKEND_API_CONTRACT.md](BACKEND_API_CONTRACT.md) for every final endpoint,
 
 ```bash
 npm test
+npm run verify:studio
 ```
+
+To seed the controlled Mitti Studio demo record into an authorized database, set private `DEMO_EMAIL` and `DEMO_PASSWORD` environment variables, then run:
+
+```bash
+npm run seed:demo
+```
+
+The seed command is idempotent, refuses a slug owned by an unrelated seller, adds only its six designated products, and never deletes unrelated records. It intentionally leaves product images blank until owned product images are uploaded.
 
 The test suite starts an isolated `mongodb-memory-server` database and verifies:
 
