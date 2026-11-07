@@ -7,7 +7,7 @@ const normalizeSlug = (value) => String(value || '').trim().toLowerCase();
 
 export const getPublicStore = async (req, res) => {
   const store = await Store.findOne({ slug: normalizeSlug(req.params.slug) }).select(
-    'name slug description whatsappNumber city createdAt updatedAt'
+    'name slug description whatsappNumber city createdAt updatedAt appearance isDemo'
   );
 
   if (!store) {

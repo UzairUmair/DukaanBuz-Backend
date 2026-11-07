@@ -143,3 +143,16 @@ export const updateMyStore = async (req, res) => {
 
   res.json({ success: true, message: 'Store updated successfully', data: store });
 };
+
+export const updateAppearance = async (req, res) => {
+  const store = await Store.findOne({ owner: req.user._id });
+  if (!store) return res.status(404).json({ success: false, message: 'Store not found' });
+  const allowed = ['themePreset','fontPreset','headerStyle','productCardStyle','gridDensity','heroLayout','primaryColor','accentColor','backgroundColor','heroTitle','heroSubtitle'];
+  if (!req.body || Object.keys(req.body).some(key => !allowed.includes(key)) ||
+      Object.values(req.body).some(value => typeof value !== 'string')) {
+    return res.status(400).json({ success: false, message: 'Invalid appearance fields' });
+  }
+  store.appearance = { ...store.appearance.toObject(), ...req.body };
+  await store.save();
+  res.json({ success: true, data: store });
+};

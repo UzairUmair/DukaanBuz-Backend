@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  updateAppearance,
   createStore,
   getMyStore,
   updateMyStore,
@@ -11,6 +12,7 @@ const router = Router();
 router.use(protect);
 router.get('/me', getMyStore);
 router.post('/', createStore);
+router.put('/me/appearance', updateAppearance);
 router.put('/me', updateMyStore);
 
 export default router;

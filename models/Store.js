@@ -2,6 +2,20 @@ import mongoose from 'mongoose';
 
 const storeSchema = new mongoose.Schema(
   {
+    isDemo: { type: Boolean, default: false },
+    appearance: {
+      themePreset: { type: String, enum: ['heritage','editorial','modern'], default: 'heritage' },
+      fontPreset: { type: String, enum: ['inter','manrope','jakarta'], default: 'inter' },
+      headerStyle: { type: String, enum: ['minimal','centered','editorial'], default: 'minimal' },
+      productCardStyle: { type: String, enum: ['minimal','soft','editorial'], default: 'soft' },
+      gridDensity: { type: String, enum: ['compact','comfortable','spacious'], default: 'comfortable' },
+      heroLayout: { type: String, enum: ['split','banner','minimal'], default: 'split' },
+      primaryColor: { type: String, match: /^#[0-9a-f]{6}$/i, default: '#063D32' },
+      accentColor: { type: String, match: /^#[0-9a-f]{6}$/i, default: '#A7E2BD' },
+      backgroundColor: { type: String, match: /^#[0-9a-f]{6}$/i, default: '#FAF8F3' },
+      heroTitle: { type: String, maxlength: 120, default: '' },
+      heroSubtitle: { type: String, maxlength: 500, default: '' },
+    },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
