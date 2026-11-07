@@ -56,6 +56,9 @@ export const getGridImage = async (req, res, next) => {
   const mimeType = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }[filename.split('.').pop()];
   res.set({ 'Content-Type': mimeType, 'Content-Length': file.length, 'X-Content-Type-Options': 'nosniff' });
   const stream = bucket().openDownloadStream(id);
-  stream.on('error', next);
-  stream.pipe(res);
+  try {
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    res.send(Buffer.concat(chunks));
+  } catch (error) { next(error); }
 };
