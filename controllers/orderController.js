@@ -25,7 +25,8 @@ export async function createOrder(req, res) {
   if (!Array.isArray(items) || !items.length || items.length > 30) fail('Choose between 1 and 30 products');
   const ids = new Set();
   for (const item of items) {
-    if (!item || !mongoose.isValidObjectId(item.productId) || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99 || ids.has(item.productId)) fail('Invalid product quantities');
+    if (!item || typeof item.productId !== 'string' || !/^[a-f0-9]{24}$/i.test(item.productId) || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99 || ids.has(item.productId.toLowerCase())) fail('Invalid product quantities');
+    item.productId = item.productId.toLowerCase();
     ids.add(item.productId);
   }
   const details = {
