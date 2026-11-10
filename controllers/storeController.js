@@ -36,6 +36,12 @@ const normalizeWhatsappNumber = (value) => {
 };
 
 const appearanceOptions = {
+  navigationOrder: new Set(['standard','story-first']),
+  showAbout: new Set(['yes','no']),
+  showContact: new Set(['yes','no']),
+  coverPosition: new Set(['left','right']),
+  homeProducts: new Set(['3','6','9','0']),
+  logoPosition: new Set(['beside','above']),
   themePreset: new Set(['heritage', 'editorial', 'modern']),
   fontPreset: new Set(['inter', 'manrope', 'jakarta']),
   headerStyle: new Set(['minimal', 'centered', 'editorial']),
@@ -55,6 +61,15 @@ const validateAppearanceInput = (body) => {
   }
 
   for (const [field, value] of Object.entries(body)) {
+    if (field === 'brandLogo') {
+      if (value === '') { values.brandLogo = ''; continue; }
+      const prefix = 'data:image/webp;base64,';
+      const encoded = typeof value === 'string' && value.length <= 90000 && value.startsWith(prefix) ? value.slice(prefix.length) : '';
+      const bytes = Buffer.from(encoded, 'base64');
+      if (!encoded || bytes.toString('base64') !== encoded || bytes.toString('ascii',0,4) !== 'RIFF' || bytes.toString('ascii',8,12) !== 'WEBP') errors.push({field,message:'Choose a valid WebP business logo.'});
+      else values.brandLogo = value;
+      continue;
+    }
     if (!Object.hasOwn(appearanceOptions, field) && !Object.hasOwn(appearanceTextLimits, field) && !['primaryColor', 'accentColor', 'backgroundColor'].includes(field)) {
       errors.push({ field, message: 'This appearance field is not supported' });
       continue;

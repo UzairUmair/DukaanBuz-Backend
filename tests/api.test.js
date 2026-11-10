@@ -169,6 +169,11 @@ test('appearance settings validate, persist, and are public', async () => {
       primaryColor: '#553322',
       heroTitle: 'A new collection',
       heroSubtitle: 'Made slowly in Karachi',
+      navigationOrder: 'story-first',
+      showAbout: 'no',
+      showContact: 'yes',
+      coverPosition: 'right',
+      homeProducts: '6',
     })
     .expect(200);
   assert.equal(saved.body.data.appearance.themePreset, 'editorial');
@@ -190,6 +195,13 @@ test('appearance settings validate, persist, and are public', async () => {
 
   const publicStore = await request(app).get('/api/public/stores/ayesha-crafts').expect(200);
   assert.equal(publicStore.body.data.appearance.heroTitle, 'A new collection');
+  assert.equal(publicStore.body.data.appearance.navigationOrder, 'story-first');
+  assert.equal(publicStore.body.data.appearance.showAbout, 'no');
+  assert.equal(publicStore.body.data.appearance.coverPosition, 'right');
+  assert.equal(publicStore.body.data.appearance.homeProducts, '6');
+  await request(app).put('/api/stores/me/appearance')
+    .set('Authorization', `Bearer ${sellerAToken}`)
+    .send({ coverPosition: 'arbitrary' }).expect(400);
   assert.equal(publicStore.body.data.appearance.primaryColor, '#553322');
 });
 
