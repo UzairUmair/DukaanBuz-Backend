@@ -80,3 +80,12 @@ test('seller isolation, valid status transitions and transaction-safe concurrent
  assert.equal(own.body.data.total,1);
  await request(app).get('/api/orders/invalid').set('Authorization','Bearer '+a.token).expect(400);
 });
+test('guest submission rate limit is enforced in MongoDB', async () => {
+  let limited = false;
+  for (let attempt = 0; attempt < 22; attempt++) {
+    const response = await post(body(pa));
+    if (response.status === 429) { limited = true; break; }
+    assert.equal(response.status, 201);
+  }
+  assert.equal(limited, true);
+});
