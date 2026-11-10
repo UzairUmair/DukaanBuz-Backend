@@ -1,3 +1,4 @@
+import orderRoutes from './routes/orderRoutes.js';
 import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,6 +22,7 @@ const allowedClientOrigins = new Set([
 ]);
 
 app.disable('x-powered-by');
+if (process.env.VERCEL === '1') app.set('trust proxy', 1);
 app.use(
   cors({
     origin: (origin, callback) => callback(null, !origin || allowedClientOrigins.has(origin)),
@@ -83,6 +85,7 @@ app.get('/api/health', async (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/public', publicRoutes);
